@@ -17,11 +17,11 @@ class Effect {
   }
 }
 
-class EffectBallBounce extends Effect {
-  constructor(x, y) {
+class EffectWallDamage extends Effect {
+  constructor(x, y, count) {
     super(x, y, 1.0);
     this.particles = []
-    for (let i = 0; i < 10; ++i) {
+    for (let i = 0; i < count; ++i) {
       this.particles.push(
         {
           "x": this.x,
@@ -41,21 +41,20 @@ class EffectBallBounce extends Effect {
       p.vy += 200 * dur;
       drawSprite(
         "wallParticle",
-        p.x - EffectBallBounce.particleSize,
-        p.y - EffectBallBounce.particleSize,
-        2 * EffectBallBounce.particleSize,
-        2 * EffectBallBounce.particleSize,
+        p.x - EffectWallDamage.particleSize,
+        p.y - EffectWallDamage.particleSize,
+        2 * EffectWallDamage.particleSize,
+        2 * EffectWallDamage.particleSize,
         p.frame
       )
     }
   }
 
-  static particleCount = 5;
   static particleSize = 3;
 }
 
-function doVisualEffect(effect, x, y) {
-  effects.add(new effect(x, y))
+function doVisualEffect(effect) {
+  effects.add(effect)
 }
 
 function randMinPlus(x) {

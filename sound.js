@@ -5,10 +5,21 @@ var soundNames = [
   "ballHitWall",
   "ballShoot",
 ]
+var soundNamesMP3 = [
+  "collect_brain",
+  "throw_brain",
+  "wall_break_1",
+  "wall_break_2",
+  "wall_bump",
+  "wall_hit_1",
+  "wall_hit_2",
+]
 var sounds = {}
 var oosspsd = 0 // outOfScreenStillPlaySoundDis
 var soundMaxDis = 0
 var soundCount = 4
+var music;
+var walkSound;
 
 var slowModeOscillator;
 var slowModeOscillatorVolume;
@@ -27,6 +38,15 @@ function initAudio() {
   stereo = new StereoPannerNode(audioContext, { pan: 0 })
 	updateStereoVariables()
 
+  music = new Audio('sounds/Dungeon_Theme_r2.mp3');
+  music.loop = true;
+  music.volume = 0.2;
+  music.play();
+
+  walkSound = new Audio('sounds/walking_3.mp3');
+  walkSound.volume = 0.3;
+  walkSound.loop = true;
+
   slowModeOscillatorVolume = audioContext.createGain();
   slowModeOscillator = audioContext.createOscillator();
   slowModeOscillator.type = "sine";
@@ -39,6 +59,14 @@ function initAudio() {
     sounds[sound] = [0]
     for (i = 0; i < soundCount; ++i) {
       sounds[sound].push(new Audio(`sounds/${sound}.wav`))
+      audioContext.createMediaElementSource(sounds[sound][i+1]).connect(stereo).connect(audioContext.destination);
+    }
+  }
+
+  for (let sound of soundNamesMP3) {
+    sounds[sound] = [0]
+    for (i = 0; i < soundCount; ++i) {
+      sounds[sound].push(new Audio(`sounds/${sound}.mp3`))
       audioContext.createMediaElementSource(sounds[sound][i+1]).connect(stereo).connect(audioContext.destination);
     }
   }

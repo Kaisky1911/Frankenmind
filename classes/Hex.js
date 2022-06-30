@@ -1,6 +1,6 @@
 // < > |
 class Hex {
-  constructor(q, r, type="background") {
+  constructor(q, r, type="wall") {
     this.q = q;
     this.r = r;
     this.x = Map.fromHexPosX(q, r)
@@ -10,6 +10,9 @@ class Hex {
   }
   drawFloor() {
     if (!this.solid) {
+      if (this.type == "wallDestroyable") {
+        drawSprite("floor", this.x - Hex.size - 0.5, this.y - Hex.yRenderSize, 2 * Hex.size + 1, 2 * Hex.yRenderSize, 0)
+      }
       drawSprite(this.sprite, this.x - Hex.size - 0.5, this.y - Hex.yRenderSize, 2 * Hex.size + 1, 2 * Hex.yRenderSize, this.spriteFrame)
     }
   }
@@ -20,6 +23,7 @@ class Hex {
     for (let o of this.objects) {
       o.draw();
     }
+    /*
     let x = this.x - player.viewX0;
     let y = this.y - player.viewY0;
     ctx.strokeStyle = "grey";
@@ -34,6 +38,29 @@ class Hex {
     ctx.lineTo(x, y - Hex.yxRatio * Hex.size);
     ctx.closePath();
     ctx.stroke();
+    */
+  }
+
+  gotHit(x, y, speed) {
+    if (this.type == "wallDestroyable") {
+      if (speed > 500) {
+        let dmg = Math.floor(speed / 500)
+        doVisualEffect(new EffectWallDamage(x, y, Math.floor(speed / 50)));
+        this.spriteFrame = Math.min(3, this.spriteFrame + dmg);
+        if (this.spriteFrame == 3) {
+          this.solid = false;
+          doVisualEffect(new EffectWallDamage(x, y, 20));
+          let sound = "wall_break_" + Math.floor(1 + Math.random() * 2)
+          playSound(sound, this.x, this.y, Math.min(speed / 1000, 1.0));
+        }
+        else {
+          let sound = "wall_hit_" + Math.floor(1 + Math.random() * 2)
+          playSound(sound, this.x, this.y, Math.min(speed / 1000, 1.0));
+        }
+      }
+    } else {
+      playSound("wall_bump", this.x, this.y, Math.min(speed / 1000, 1.0));
+    }
   }
 
   loadObject(o) {
@@ -45,21 +72,35 @@ class Hex {
   
   setType(type) {
     this.type = type
-    this.solid = this.type in Hex.solidHexTypes
+    this.isPit = false;
     if (this.type == "wall") {
       this.sprite = "wall";
       this.spriteFrame = 0
+      this.solid = true;
     }
-    else if (this.type == "background") {
+    else if (this.type == "wallDestroyable") {
+      this.sprite = "wallDestroyable";
+      this.spriteFrame = 0;
+      this.solid = true;
+    }
+    else if (this.type == "floor") {
       this.sprite = "floor";
       this.spriteFrame = Math.floor(Math.random() * 2 + 4);
+      this.solid = false;
+    }
+    else if (this.type == "pit") {
+      this.sprite = "pit";
+      this.spriteFrame = 0;
+      this.solid = false;
+      this.isPit = true;
     }
   }
 
-  static yxRatio = 2 / Math.sqrt(3);
-  static size = 32;
-  static yRenderSize = Math.round(Hex.size * Hex.yxRatio);
-  static solidHexTypes = {
-    "wall": true
+  toggleFrames() {
+    this.spriteFrame = (this.spriteFrame + 1) % sprites[this.sprite].frames
   }
+
+  static yxRatio = 2 / Math.sqrt(3);
+  static size = 48;
+  static yRenderSize = Math.round(Hex.size * Hex.yxRatio);
 }

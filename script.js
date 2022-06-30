@@ -11,6 +11,7 @@ canvas.height = innerHeight;
 gameSpeed = 1.0; // at 1.0 one real-life second is one in-game second
 lastRender = 0;
 gameStarted = false;
+levelEditorEnabled = true;
 
 // Pixel Art Filter //
 ctx.imageSmoothingEnabled = false;
@@ -61,9 +62,8 @@ function gameUpdate(dur) {
 // FPS Calculation //
 function fpsCalculation(timestamp) {
 	dur = 0.001 * (timestamp - lastRender) 
-  // if the game is worse than 10 FPS, it will actually slow to at max 0.1 in-game-seconds per frame and will give some warning
+  // if the game is worse than 10 FPS, it will actually slow to at max 0.1 in-game-seconds per frame
   if (dur > 0.1) { 
-    console.log("really bad, this frame took " + dur + " seconds to finish")
     dur = 0.1
   }
 	lastRender = timestamp
@@ -81,7 +81,6 @@ const onResize = () => {
   ctx.imageSmoothingEnabled = false;
 	updateStereoVariables()
 }
-
 
 // Run game when site loads //
 window.onload = onLoad;

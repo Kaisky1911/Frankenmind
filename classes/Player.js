@@ -6,6 +6,8 @@ class Player extends GameObject {
     this.vx = 0;
     this.vy = 0;
     this.ball = new Ball(this.x, this.y, this);
+    this.camShakeIntensity = 0
+    this.camShakeTime = 0
     this.updateViewPort();
     this.mouseX = 0;
     this.mouseY = 0;
@@ -107,15 +109,29 @@ class Player extends GameObject {
     this.y += this.vy * dur;
     map.doMoveCollision(this);
     this.updateHex()
-    this.updateViewPort();
+    this.updateViewPort(dur);
     this.updateAngle(dur);
     this.ball.update(dur);
   }
-  updateViewPort() {
-    this.viewX0 = this.x - canvas.width / 2;
-    this.viewY0 = this.y - canvas.height / 2;
-    this.viewX1 = this.x + canvas.width / 2;
-    this.viewY1 = this.y + canvas.height / 2;
+
+  doCameraShake(intensity, dur) {
+    this.camShakeIntensity = intensity
+    this.camShakeTime = dur
+    this.camShakeDur = dur
+  }
+
+  updateViewPort(dur) {
+    let camShakeX = 0;
+    let camShakeY = 0;
+    if (this.camShakeTime > 0) {
+      this.camShakeTime -= dur;
+      camShakeX = (2 * Math.random() - 1) * this.camShakeTime / this.camShakeDur * this.camShakeIntensity;
+      camShakeY = (2 * Math.random() - 1) * this.camShakeTime / this.camShakeDur * this.camShakeIntensity;
+    }
+    this.viewX0 = this.x - canvas.width / 2 + camShakeX;
+    this.viewY0 = this.y - canvas.height / 2 + camShakeY;
+    this.viewX1 = this.x + canvas.width / 2 + camShakeX;
+    this.viewY1 = this.y + canvas.height / 2 + camShakeY;
   }
 
   detachBall() {
@@ -140,19 +156,31 @@ class Player extends GameObject {
     this.action1pressed = false;
     if (this.ball.state == "attached") this.detachBall();
   }
+  mousePressLeft() {
+    if (levelEditorEnabled) {
+      let q = Map.toHexPosQ(this.mouseX, this.mouseY)
+      let r = Map.toHexPosR(this.mouseX, this.mouseY)
+      let hex = map.get(q, r);
+      if (hex.type == "wall") hex.setType("wallDestroyable");
+      else if (hex.type == "wallDestroyable") hex.setType("pit");
+      else hex.setType("wall");
+    }
+  }
   mousePressRight() {
-    let q = Map.toHexPosQ(this.mouseX, this.mouseY)
-    let r = Map.toHexPosR(this.mouseX, this.mouseY)
-    map.get(q, r).setType("wall");
+    if (levelEditorEnabled) {
+      let q = Map.toHexPosQ(this.mouseX, this.mouseY)
+      let r = Map.toHexPosR(this.mouseX, this.mouseY)
+      map.get(q, r).setType("floor");
+    }
   }
 
   
-  static size = 16; // size is in radius, so the sprite size is double (radius is easier for circular collision detection)
+  static size = 30; // size is in radius, so the sprite size is double (radius is easier for circular collision detection)
   static spriteKey = "player";
-  static moveSpeed = 100.0;
-  static maxSlowMowTime = 2.0;
-  static slowMowFadeInTime = 0.2;
+  static moveSpeed = 300.0;
+  static maxSlowMowTime = 3.0;
+  static slowMowFadeInTime = 0.4;
   static slowMowFadeOutTime = 0.2;
-  static slowMowSpeed = 0.3;
+  static slowMowSpeed = 0.2;
   static handLength = 30;
 }
