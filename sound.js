@@ -4,6 +4,7 @@ var soundNames = [
   "slowmow1",
   "ballHitWall",
   "ballShoot",
+  "bat_flap_2",
 ]
 var soundNamesMP3 = [
   "collect_brain",
@@ -13,12 +14,16 @@ var soundNamesMP3 = [
   "wall_bump",
   "wall_hit_1",
   "wall_hit_2",
+  "bat_attack",
+  "bat_death",
+  "bat_flap",
 ]
 var sounds = {}
 var oosspsd = 0 // outOfScreenStillPlaySoundDis
 var soundMaxDis = 0
-var soundCount = 4
-var music;
+var soundCount = 10
+var music = {};
+var currentMusic = "default";
 var walkSound;
 
 var slowModeOscillator;
@@ -27,6 +32,20 @@ var slowModeOscillatorVolume;
 const AudioContext = window.AudioContext || window.webkitAudioContext
 audioContext = null
 stereo = null
+
+function updateMusic(name) {
+  if (name != currentMusic) {
+    if (music[currentMusic].paused) {
+      currentMusic = name;
+    }
+    else {
+      music[currentMusic].pause();
+      music[currentMusic].currentTime = 0;
+      currentMusic = name;
+      music[currentMusic].play();
+    }
+  }
+}
 
 function setSlowModeSound(volume, freq) {
   slowModeOscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
@@ -38,10 +57,15 @@ function initAudio() {
   stereo = new StereoPannerNode(audioContext, { pan: 0 })
 	updateStereoVariables()
 
-  music = new Audio('sounds/Dungeon_Theme_r2.mp3');
-  music.loop = true;
-  music.volume = 0.2;
-  music.play();
+  music["default"] = new Audio('sounds/Dungeon_Theme_r2.mp3');
+  music["default"].loop = true;
+  music["default"].volume = 0.2;
+
+  music["battle"] = new Audio('sounds/Battle_Theme_1.mp3');
+  music["battle"].loop = true;
+  music["battle"].volume = 0.2;
+
+  music[currentMusic].play();
 
   walkSound = new Audio('sounds/walking_3.mp3');
   walkSound.volume = 0.3;

@@ -6,8 +6,24 @@ class GameObject {
     this.y = y;
     this.hex = map.hexAtXY(this.x, this.y);
     this.hex.loadObject(this);
+    this.constructorName = this.constructor.name
+  }
+  loadData(data) {
+    for (let [key, value] of Object.entries(data)) {
+      this[key] = value;
+    }
+  }
+  stringify() {
+    let hex = this.hex
+    this.hex = null;
+    let str = JSON.stringify(this);
+    this.hex = hex;
+    return str;
   }
 
+  delete() {
+    this.hex.objects.delete(this);
+  }
   
   updateHex() {
     let hex = map.hexAtXY(this.x, this.y);
@@ -17,4 +33,5 @@ class GameObject {
       this.hex.loadObject(this);
     }
   }
+
 }

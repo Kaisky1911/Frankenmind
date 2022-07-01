@@ -5,30 +5,42 @@ class Map {
         this.data = Map.createMapDataFromDict(mapData)
     }
 
-    draw() {
+    draw(dur) {
         let q0 = Map.toHexPosQ(player.viewX0, player.viewY0);
         let r0 = Map.toHexPosR(player.viewX0, player.viewY0);
         let q1 = Map.toHexPosQ(player.viewX1, player.viewY1);
         let r1 = Map.toHexPosR(player.viewX1, player.viewY1);
         for (let r = r0 - 1; r <= r1 + 1; r++) {
-                let q0_row = Math.round(q0 - (r - r0) / 2) - 1
-                let q1_row = Math.round(q1 + (r1 - r) / 2) + 1
-                for (let q = q0_row - 1; q <= q1_row + 1; q++) {
-                    let hex = this.get(q, r);
-                    hex.drawFloor();
-                }
+            let q0_row = Math.round(q0 - (r - r0) / 2) - 1
+            let q1_row = Math.round(q1 + (r1 - r) / 2) + 1
+            for (let q = q0_row - 1; q <= q1_row + 1; q++) {
+                let hex = this.get(q, r);
+                hex.draw(dur);
+            }
         }
-        
-        if (player.ball.state == "attached") {
-            player.drawRope();
-        }
-        for (let r = r0 - 1; r <= r1 + 1; r++) {
-                let q0_row = Math.round(q0 - (r - r0) / 2) - 1
-                let q1_row = Math.round(q1 + (r1 - r) / 2) + 1
-                for (let q = q0_row - 1; q <= q1_row + 1; q++) {
-                    let hex = this.get(q, r);
-                    hex.drawOther();
+    }
+
+    update(dur) {
+        let range = 20;
+        let q0 = Map.toHexPosQ(player.x, player.y);
+        let r0 = Map.toHexPosR(player.x, player.y);
+        for (let r = -range; r <= range; r++) {
+            var q_start;
+            var q_end;
+            if (r < 0) {
+                q_start = -r -range;
+                q_end = range;
+            }
+            else {
+                q_start = -range;
+                q_end = range - r;
+            }
+            for (let q = q_start; q <= q_end; q++) {
+                let hex = this.get(q0 + q, r0 + r);
+                for (let o of hex.objects) {
+                    o.update(dur);
                 }
+            }
         }
     }
 
@@ -36,7 +48,7 @@ class Map {
         let key = `${q} ${r}`;
         if (key in this.data) return this.data[key];
         else {
-            let hex = new Hex(q, r);
+            let hex = new Hex(q, r, this.data);
             this.data[key] = hex
             return hex;
         }
@@ -66,15 +78,12 @@ class Map {
     }
 
     getHexNeighboorHood(q, r) { // returns the hex and all its 6 neighboors on that position in an array
-        return [
-            map.get(q, r),
-            map.get(q+1, r),
-            map.get(q, r+1),
-            map.get(q-1, r+1),
-            map.get(q-1, r),
-            map.get(q, r-1),
-            map.get(q+1, r-1)
-        ]
+        let hex = map.get(q, r);
+        let hexs = [hex]
+        for (let nb of hex.neighboors) {
+            hexs.push(nb);
+        }
+        return hexs;
     }
 
     hexAtXY(x, y) {
@@ -83,7 +92,7 @@ class Map {
         return this.get(q, r);
     }
 
-    saveToString() {
+    stringify(saveObjects=false) {
         let mapData = {}
         
         for (const [key, hex] of Object.entries(this.data)) {
@@ -92,22 +101,55 @@ class Map {
                 "r": hex.r,
                 "type": hex.type,
                 "sprite": hex.sprite,
-                "spriteFrame": hex.spriteFrame,
+                "spriteFrames": hex.spriteFrames,
+            }
+            if (saveObjects) {
+                mapData[key]["objects"] = []
+                for (let o of hex.objects) {
+                    mapData[key]["objects"].push(o.stringify())
+                }
             }
         }
         return JSON.stringify(mapData);
     }
 
+
+    static connectNeighboorhood(data, hex, q, r) {
+        hex.neighboors[0] = Map.connectNeighboor(data, q+1, r, 3, hex)
+        hex.neighboors[1] = Map.connectNeighboor(data, q, r+1, 4, hex)
+        hex.neighboors[2] = Map.connectNeighboor(data, q-1, r+1, 5, hex)
+        hex.neighboors[3] = Map.connectNeighboor(data, q-1, r, 0, hex)
+        hex.neighboors[4] = Map.connectNeighboor(data, q, r-1, 1, hex)
+        hex.neighboors[5] = Map.connectNeighboor(data, q+1, r-1, 2, hex)
+    }
+
+    static connectNeighboor(data, q, r, id, nb) {
+        let key = `${q} ${r}`;
+        if (!(key in data)) return null;
+        let hex = data[key];
+        hex.neighboors[id] = nb;
+        return hex;
+    }
+
     static createMapDataFromString(mapString) {
-        return createMapDataFromDict(JSON.parse(mapString))
+        return Map.createMapDataFromDict(JSON.parse(mapString))
     }
 
     static createMapDataFromDict(mapdata) {
         let data = {}
-        for (const [key, hex] of Object.entries(mapdata)) {
-            data[key] = new Hex(hex.q, hex.r, hex.type);
-            data[key].sprite = hex.sprite;
-            data[key].spriteFrame = hex.spriteFrame;
+        for (const [key, hexData] of Object.entries(mapdata)) {
+            let hex = new Hex(hexData.q, hexData.r, data, hexData.type);
+            data[key] = hex;
+            hex.sprite = hexData.sprite;
+            hex.spriteFrames = hexData.spriteFrames;
+            if ("objects" in hexData) {
+                for (let objStr of hexData.objects) {
+                    let objData = JSON.parse(objStr);
+                    let o = gameObjClasses[objData.constructorName].createFromDict(objData);
+                    hex.loadObject(o);
+                    o.hex = hex;
+                }
+            }
         }
         return data
     }
@@ -135,7 +177,7 @@ class Map {
 
 
 function saveMap() {
-    var mapString = "var mapData = " + map.saveToString()
+    var mapString = "var mapData = " + map.stringify()
 
     var a = document.createElement("a");
     a.href = window.URL.createObjectURL(new Blob([mapString], {type: "text/plain"}));

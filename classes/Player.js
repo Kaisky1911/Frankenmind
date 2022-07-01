@@ -5,7 +5,6 @@ class Player extends GameObject {
     super(x, y);
     this.vx = 0;
     this.vy = 0;
-    this.ball = new Ball(this.x, this.y, this);
     this.camShakeIntensity = 0
     this.camShakeTime = 0
     this.updateViewPort();
@@ -20,19 +19,44 @@ class Player extends GameObject {
     this.slowMowState = "none";
     this.slowMowTime = 0;
     this.action1pressed = false;
+    this.maxHp = 6;
+    this.hp = this.maxHp;
+    this.frameTimer = 0;
+    this.timePerFrame = 0.1;
+    this.isWalking = false;
+    this.tookDamageTimer = 0;
+    this.dead = false;
+    this.deadTimer = 0;
+    this.walkingDir = 0;
+    player = this;
+  }
+  static createFromDict(data) {
+    let o = new Player(data.x, data.y)
+    o.loadData(data)
+    return o
   }
   draw(dur) {
-    
+    if (ball.state == "attached") ball.drawCalledByPlayer(dur);
+    this.drawRope();
     if (this.slowMowState == "fadingin" || this.slowMowState == "slow") {
       this.drawPredictionLine();
     }
-
-    drawSprite(Player.spriteKey, this.x - Player.size, this.y - Player.size, 2 * Player.size, 2 * Player.size); // size is in radius, so the sprite size is double (radius is easier for circular collision detection)
+    if (this.isWalking && !this.dead) this.frameTimer += dur;
+    else this.frameTimer = 0;
+    let frame = Math.floor(this.frameTimer / this.timePerFrame) % sprites[Player.spriteKey].frames;
+    let angle = 0;
+    if (this.dead) {
+      angle = Math.min(this.deadTimer, 0.5) * Math.PI
+    }
+    drawSprite(Player.spriteKey, this.x - Player.size, this.y - Player.size, 2 * Player.size, 2 * Player.size, frame, angle, ctx, this.walkingDir);
   }
 
   drawRope() {
-    let dx = this.x - this.ball.x;
-    let dy = this.y - this.ball.y;
+    if (ball.state != "attached") {
+      return;
+    }
+    let dx = this.x - ball.x;
+    let dy = this.y - ball.y;
     let angle = Math.atan2(dy, dx);
     let dis = Math.sqrt(dx*dx + dy*dy);
     let sprite = sprites["chain"];
@@ -40,7 +64,7 @@ class Player extends GameObject {
     let spriteCutOffWidth = Math.min(sprite.w, Math.round(dis * sprite.h / renderSize))
 
     ctx.save();
-    ctx.translate(this.ball.x - this.viewX0, this.ball.y - this.viewY0);
+    ctx.translate(ball.x - this.viewX0, ball.y - this.viewY0);
     ctx.rotate(angle);
     ctx.drawImage(
       sprite.img,
@@ -55,11 +79,22 @@ class Player extends GameObject {
   drawPredictionLine() {
     ctx.lineWidth = Ball.size * 2;
     ctx.strokeStyle = "rgba(255, 0, 0, 0.1)"
-    let angle = Math.atan2(this.ball.vy, this.ball.vx);
+    let angle = Math.atan2(ball.vy, ball.vx);
     ctx.beginPath();
-    ctx.moveTo(this.ball.x  - this.viewX0, this.ball.y - this.viewY0);
-    ctx.lineTo(this.ball.x  - this.viewX0 + 1000 * Math.cos(angle), this.ball.y - this.viewY0 + 1000 * Math.sin(angle));
+    ctx.moveTo(ball.x  - this.viewX0, ball.y - this.viewY0);
+    ctx.lineTo(ball.x  - this.viewX0 + 1000 * Math.cos(angle), ball.y - this.viewY0 + 1000 * Math.sin(angle));
     ctx.stroke();
+  }
+
+  damage(dmg) {
+    if (dmg > 0) {
+      this.hp -= dmg;
+      this.tookDamageTimer = 0.5;
+    }
+    if (this.hp <= 0) {
+      this.dead = true;
+      return;
+    }
   }
 
   updateAngle(dur) {
@@ -79,10 +114,23 @@ class Player extends GameObject {
     */
   }
 
+  canBeAttacked() {
+    return this.tookDamageTimer <= 0;
+  }
   
 
   
   update(dur) {
+    if (this.dead) {
+      this.deadTimer += dur;
+      if (this.deadTimer > 2) {
+        loadGame();
+      }
+      return;
+    }
+    if (this.tookDamageTimer > 0) {
+      this.tookDamageTimer -= dur;
+    }
     let realDur = dur / gameSpeed;
     if (this.slowMowState == "fadingin" || this.slowMowState == "slow") {
       this.slowMowTime += realDur;
@@ -111,7 +159,7 @@ class Player extends GameObject {
     this.updateHex()
     this.updateViewPort(dur);
     this.updateAngle(dur);
-    this.ball.update(dur);
+    ball.updateCalledByPlayer(dur);
   }
 
   doCameraShake(intensity, dur) {
@@ -135,7 +183,7 @@ class Player extends GameObject {
   }
 
   detachBall() {
-    this.ball.detach();
+    ball.detach();
     if (this.slowMowState != "none") {
       this.slowMowState = "fadingout";
       //playSound("slowmow1", this.x, this.y, 1.0);
@@ -145,16 +193,16 @@ class Player extends GameObject {
   action1Press() {
     if (this.action1pressed) return; // avoid multiple calls when holding the key
     this.action1pressed = true;
-    if (this.ball.state == "attached") {
+    if (ball.state == "attached") {
       this.slowMowTime = 0;
       this.slowMowState = "fadingin"; // fancy slowmow while holding mouse for better aiming (could use some bassy sound effects)
       //playSound("slowmow0", this.x, this.y, 1.0);
     }
-    else if (this.ball.state == "free") this.ball.returnToPlayer();
+    else if (ball.state == "free") ball.returnToPlayer();
   }
   action1Release() {
     this.action1pressed = false;
-    if (this.ball.state == "attached") this.detachBall();
+    if (ball.state == "attached") this.detachBall();
   }
   mousePressLeft() {
     if (levelEditorEnabled) {

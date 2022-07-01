@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
-  <title>Curdle Game Jam #26</title>
+  <title>Dr Frank lost his Mind!</title>
 </head>
 <body oncontextmenu="return false;">
-  <canvas></canvas>
+  <canvas id="layer0" width="100" height="100" style="position: absolute; left: 0; top: 0; z-index: 0; background:black;"></canvas>
+  <canvas id="layer1" width="100" height="100" style="position: absolute; left: 0; top: 0; z-index: 1; background:transparent;"></canvas>
+  <canvas id="layer2" width="100" height="100" style="position: absolute; left: 0; top: 0; z-index: 2; background:transparent;"></canvas>
 </body>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/eruda/2.4.1/eruda.min.js"></script>
 <script src="mapData.js"></script>
 <script src="classes/Hex.js"></script>
 <script src="classes/Map.js"></script>
@@ -18,9 +18,11 @@
 <script src="classes/Ball.js"></script>
 <script src="classes/Player.js"></script>
 <script src="classes/Enemy.js"></script>
+<script src="classes/GameEvent.js"></script>
 <script src="effects/effect.js"></script>
 <script src="graphics.js"></script>
 <script src="controls.js"></script>
 <script src="sound.js"></script>
+<script src="save.js"></script>
 <script src="script.js"></script>
 </html>

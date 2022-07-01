@@ -2,30 +2,40 @@
 
 
 class Ball extends GameObject {
-  constructor(x, y, player) {
+  constructor(x, y) {
     super(x, y);
-    this.player = player;
     this.vx = 0;
     this.vy = 0;
     this.angle = 0;
     this.vAngle = 0;
     this.state = "attached";
     this.stretched = false;
+    ball = this;
+  }
+  static createFromDict(data) {
+    let o = new Ball(data.x, data.y)
+    o.loadData(data)
+    return o
   }
 
-  draw(dur) {
+  drawCalledByPlayer(dur) {
     drawSprite(Ball.spriteKey, this.x - Ball.size, this.y - Ball.size, 2 * Ball.size, 2 * Ball.size, 0, this.angle);
   }
+  draw(dur) {
+    if (ball.state != "attached") drawSprite(Ball.spriteKey, this.x - Ball.size, this.y - Ball.size, 2 * Ball.size, 2 * Ball.size, 0, this.angle);
+  }
 
-  update(dur) {
+  update(dur) {} // ignore
+
+  updateCalledByPlayer(dur) {
     // Ball Physics
-    let dx = this.player.x - this.x;
-    let dy = this.player.y - this.y;
+    let dx = player.x - this.x;
+    let dy = player.y - this.y;
     if ((this.state == "attached") && dx*dx + dy*dy > Ball.ropeLength*Ball.ropeLength) {
       this.stretched = true;
       let angle = Math.atan2(dy, dx);
-      let dvx = this.vx - this.player.vx;
-      let dvy = this.vy - this.player.vy;
+      let dvx = this.vx - player.vx;
+      let dvy = this.vy - player.vy;
       let ballAngle = Math.atan2(dvy, dvx);
       let cos = Math.cos(angle);
       let sin = Math.sin(angle);
@@ -44,18 +54,20 @@ class Ball extends GameObject {
           this.vx = vel * sin + player.vx;
           this.vy = -vel * cos + player.vy;
         }
-        this.x = this.player.x - Ball.ropeLength * cos;
-        this.y = this.player.y - Ball.ropeLength * sin;
+        this.x = player.x - Ball.ropeLength * cos;
+        this.y = player.y - Ball.ropeLength * sin;
       }
       else {
-        let dotProduct = cos * (this.vx - this.player.vx) + sin * (this.vy - this.player.vy)
-        this.vx -= cos * dotProduct;
-        this.vy -= sin * dotProduct;
+        let dotProduct = cos * (this.vx - player.vx) + sin * (this.vy - player.vy)
+        if (dotProduct < 0) {
+          this.vx -= 1.5 * cos * dotProduct;
+          this.vy -= 1.5 * sin * dotProduct;
+        }
       }
     }
     else if (this.state == "return") {
-      let dx = this.player.x - this.x;
-      let dy = this.player.y - this.y;
+      let dx = player.x - this.x;
+      let dy = player.y - this.y;
       if (dx*dx + dy*dy > Ball.ropeLength*Ball.ropeLength) {
         let angle = Math.atan2(dy, dx);
         this.vx += 100 * Math.cos(angle);
@@ -114,7 +126,8 @@ class Ball extends GameObject {
     this.state = "free";
     this.vx *= 1;
     this.vy *= 1;
-    // playSound("ballShoot", this.x, this.y, 1.0);
+    let vel = Math.sqrt(this.vx * this.vx + this.vy * this.vy)
+    playSound("throw_brain", this.x, this.y, Math.min(1.0, vel / 3000));
   }
 
   returnToPlayer() {
