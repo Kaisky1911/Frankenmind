@@ -1,13 +1,14 @@
 // < > |
 
 class Collectible extends GameObject {
-    constructor(x, y) {
+    constructor(x, y, brainCanTrigger=false) {
         super(x, y);
+        this.brainCanTrigger = brainCanTrigger
     }
 
     update(dur) {
         if (!levelEditorEnabled) {
-            if (this.hex.objects.has(player)) {
+            if (this.hex.objects.has(player) || (this.brainCanTrigger && this.hex.objects.has(ball))) {
                 this.effect(dur);
             }
             else {
@@ -50,7 +51,7 @@ class Heart extends Collectible {
 class Lever extends Collectible {
     constructor(q, r, dq, dr) {
         let hex = map.get(q, r)
-        super(hex.x, hex.y);
+        super(hex.x, hex.y, true);
         this.size = 20;
         this.on = false;
         this.w = 40;
