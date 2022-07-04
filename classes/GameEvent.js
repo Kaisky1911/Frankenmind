@@ -18,6 +18,7 @@ class GameEvent extends GameObject {
     }
 
     update(dur) {
+        if (levelEditorEnabled) return;
         if (this.done) {
             this.delete();
             return;
@@ -46,26 +47,46 @@ class GameEvent extends GameObject {
 }
 
 
+
+
 var gameEvents;
 function initGameEvents() {
     gameEvents = [
-        new GameEvent(200, 200, 500, 0, "gameEvent1"),
+        new GameEvent(200, 200, 1e6, 0, "gameEvent1"),
         new GameEvent(5500, -600, 700, 10, "gameEvent2")
     ]
 }
 
 function gameEvent1(count, dur) {
-    if (count == 0) saveGame();
-    new Bat(3000, 0);
-    new Bat(5800, -400);
-    new Bat(5600, -200);
-    new Bat(5500, -600);
+    if (count == 0) {
+        saveGame();
+        saveGame("leveleditor");
+    }
+    map.get(39, 2).spriteFrames[0] = 2;
+    new Sign(1, 2, "WASD or Arrow Keys to move!")
+    new Sign(19, 0, "Swing your brain by moving! It can even destroys some Walls!")
+    new Sign(35, -1, "Hold your Space Key while swinging fast to slow down time... and release!")
+    new Sign(47, -2, "Your brain does DOUBLE damage while released!")
+    new Sign(82, -28, "Some walls may not be destroyed... but moved by brain power!")
+    new Sign(114, -67, "You can walk on lava. But your brain cannot. Be careful!")
+    
+    new Save(42, 1);
+    new Save(84, -34);
+    new Save(59, -31);
+    new Save(53, -37);
+    new Save(40, -31);
+
+    new Lever(116, -71, 100, -55)
+    new Lever(72, -24, 60, -33)
+    new Lever(57, -36, 64, -41)
+    new Lever(74, -53, 64, -47)
+    new Lever(22, -54, 37, -31)
+    new Lever(6, -6, 45, -24)
 }
 function gameEvent2(count, dur) {
-    if (count == 0) saveGame();
     while (Math.random() < dur) {
         let a = Math.random() * Math.PI * 2
-        new Bat(1000 * Math.cos(a) + player.x, 1000 * Math.sin(a) + player.y, true);
+        //new Bat(1000 * Math.cos(a) + player.x, 1000 * Math.sin(a) + player.y, true);
     }
 }
 

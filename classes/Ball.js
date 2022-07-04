@@ -10,6 +10,11 @@ class Ball extends GameObject {
     this.vAngle = 0;
     this.state = "attached";
     this.stretched = false;
+    this.fallingDownDis = 1;
+    this.playerDisAtPullBackTime = null;
+    this.fallingDownDisAtPullBackTime = null;
+    this.size = Ball.size
+    this.underEarth = false;
     ball = this;
   }
   static createFromDict(data) {
@@ -19,10 +24,20 @@ class Ball extends GameObject {
   }
 
   drawCalledByPlayer(dur) {
-    drawSprite(Ball.spriteKey, this.x - Ball.size, this.y - Ball.size, 2 * Ball.size, 2 * Ball.size, 0, this.angle);
+    let size = Ball.size / this.fallingDownDis
+    let context = ctx;
+    if (this.fallingDownDis > 1.5) context = ctxBack;
+    drawSprite(Ball.spriteKey, this.x - size, this.y - size + 100 * (this.fallingDownDis - 1.0), 2 * size, 2 * size, 0, this.angle, context);
+    drawShadow(this.x, this.y + size, size, ctxShadow);
   }
   draw(dur) {
-    if (ball.state != "attached") drawSprite(Ball.spriteKey, this.x - Ball.size, this.y - Ball.size, 2 * Ball.size, 2 * Ball.size, 0, this.angle);
+    let size = Ball.size / this.fallingDownDis
+    if (ball.state != "attached") {
+      let context = ctx;
+      if (this.fallingDownDis > 1.5) context = ctxBack;
+      drawSprite(Ball.spriteKey, this.x - size, this.y - size + 100 * (this.fallingDownDis - 1.0), 2 * size, 2 * size, 0, this.angle, context);
+    } 
+    drawShadow(this.x, this.y + 1.2 * size, 0.8 * size, ctxShadow);
   }
 
   update(dur) {} // ignore
@@ -68,19 +83,40 @@ class Ball extends GameObject {
     else if (this.state == "return") {
       let dx = player.x - this.x;
       let dy = player.y - this.y;
-      if (dx*dx + dy*dy > Ball.ropeLength*Ball.ropeLength) {
+      let dis = Math.sqrt(dx*dx + dy*dy) - Ball.ropeLength
+      if (this.playerDisAtPullBackTime == null) {
+        this.playerDisAtPullBackTime = dis;
+        this.fallingDownDisAtPullBackTime = this.fallingDownDis - 1.0;
+      }
+      this.fallingDownDis = 1.0 + this.fallingDownDisAtPullBackTime * dis / this.playerDisAtPullBackTime;
+      if (this.fallingDownDis < 1.5) {
+        this.underEarth = false
+      }
+      if (dis > 0) {
         let angle = Math.atan2(dy, dx);
-        this.vx += 100 * Math.cos(angle);
-        this.vy += 100 * Math.sin(angle);
+        this.vx += 10000 * Math.cos(angle) * dur;
+        this.vy += 10000 * Math.sin(angle) * dur;
       }
       else {
-        this.state = "attached";
+        this.attach();
       }
       this.vx *= Math.exp(-4 * dur);
       this.vy *= Math.exp(-4 * dur);
     }
     else if (this.state == "free") {
-      
+      if (this.hex.isPit) {
+        this.fallingDownDis += dur;
+        if (this.fallingDownDis > 1.5) {
+          if (!this.underEarth) {
+            playSound("brain_fall", this.x, this.y, 0.4);
+            player.doSpeech("lostbrain")
+            this.underEarth = true;
+          }
+        }
+      }
+      else if(this.fallingDownDis <= 1.5) {
+        this.fallingDownDis = 1;
+      }
     }
     else {
       this.stretched = false;
@@ -92,16 +128,16 @@ class Ball extends GameObject {
     this.vy *= Math.exp(-dur/4);
     this.vAngle *= Math.exp(-dur/4);
     if (this.state != "return") {
-      this.doBounceCollision();
+      this.doBounceCollision(this.fallingDownDis > 1.5);
     }
     this.updateHex();
   }
 
   
-  doBounceCollision() {
+  doBounceCollision(inPit = false) {
     let hexs = map.getHexNeighboorHood(Map.toHexPosQ(this.x, this.y), Map.toHexPosR(this.x, this.y))
     for (let hex of hexs) {
-        if (hex.solid) {
+        if ((!inPit && hex.solid) || (inPit && !hex.isPit)) {
             let dx = this.x - hex.x;
             let dy = this.y - hex.y;
             let disSq = dx*dx + dy*dy;
@@ -115,12 +151,18 @@ class Ball extends GameObject {
                     this.vx -= 1.5 * dotProduct * cos;
                     this.vy -= 1.5 * dotProduct * sin;
                     player.doCameraShake(Math.min(-dotProduct / 100, 10), 0.5);
-                    hex.gotHit(this.x, this.y, -dotProduct)
+                    hex.gotHit(this.x, this.y, -dotProduct, angle + Math.PI)
                 }
             }
         }
     }
 }
+
+  attach() {
+    this.state = "attached";
+    this.fallingDownDis = 1.0;
+    this.playerDisAtPullBackTime = null;
+  }
 
   detach() {
     this.state = "free";
@@ -128,13 +170,25 @@ class Ball extends GameObject {
     this.vy *= 1;
     let vel = Math.sqrt(this.vx * this.vx + this.vy * this.vy)
     playSound("throw_brain", this.x, this.y, Math.min(1.0, vel / 3000));
+    player.doSpeech("throwbrain")
   }
 
   returnToPlayer() {
-    if (this.state == "free") this.state = "return";
+    if (this.state == "free") {
+      let dx = player.x - this.x;
+      let dy = player.y - this.y;
+      let dis = Math.sqrt(dx*dx + dy*dy) - Ball.ropeLength
+      if (dis < 0) {
+        this.attach();
+        player.disableNextAction1PressRelease = true;
+      }
+      else {
+        this.state = "return";
+      }
+    }
   }
 
   static size = 20;
   static spriteKey = "ball";
-  static ropeLength = 120;
+  static ropeLength = 100;
 }

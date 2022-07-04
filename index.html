@@ -4,12 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
-  <title>Dr Frank lost his Mind!</title>
+  <title>Frankenmind</title>
 </head>
 <body oncontextmenu="return false;">
   <canvas id="layer0" width="100" height="100" style="position: absolute; left: 0; top: 0; z-index: 0; background:black;"></canvas>
   <canvas id="layer1" width="100" height="100" style="position: absolute; left: 0; top: 0; z-index: 1; background:transparent;"></canvas>
   <canvas id="layer2" width="100" height="100" style="position: absolute; left: 0; top: 0; z-index: 2; background:transparent;"></canvas>
+  <canvas id="layer3" width="100" height="100" style="position: absolute; left: 0; top: 0; z-index: 3; background:transparent;"></canvas>
+  <canvas id="layer4" width="100" height="100" style="position: absolute; left: 0; top: 0; z-index: 4; background:transparent;"></canvas>
 </body>
 <script src="mapData.js"></script>
 <script src="classes/Hex.js"></script>
@@ -19,6 +21,8 @@
 <script src="classes/Player.js"></script>
 <script src="classes/Enemy.js"></script>
 <script src="classes/GameEvent.js"></script>
+<script src="classes/Projectiles.js"></script>
+<script src="classes/Collectibles.js"></script>
 <script src="effects/effect.js"></script>
 <script src="graphics.js"></script>
 <script src="controls.js"></script>

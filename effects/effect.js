@@ -17,6 +17,32 @@ class Effect {
   }
 }
 
+
+class EffectNumberPop extends Effect {
+  constructor(x, y, text, color, size, maxTime = 0.5) {
+    super(x, y, maxTime);
+    this.text = text;
+    this.color = color;
+    this.fillStyle = `rgb(${255 * color[0]}, ${255 * color[1]}, ${255 * color[2]})`;
+    this.size = size;
+    this.font = size + "px pixelfont";
+  }
+  
+  draw(dur) {
+    super.draw(dur);
+    ctxTop.font = this.font;
+
+    ctxTop.textAlign = "center"
+    ctxTop.fillStyle = "black"
+    ctxTop.fillText(this.text, this.x - player.viewX0-this.size / 10, this.y - player.viewY0+this.size / 10)
+    ctxTop.fillText(this.text, this.x - player.viewX0-this.size / 10, this.y - player.viewY0)
+    ctxTop.fillText(this.text, this.x - player.viewX0, this.y - player.viewY0+this.size / 10)
+    ctxTop.fillStyle = this.fillStyle;
+    ctxTop.fillText(this.text, this.x - player.viewX0, this.y - player.viewY0)
+    this.y -= dur * 50;
+  }
+}
+
 class EffectWallDamage extends Effect {
   constructor(x, y, count) {
     super(x, y, 1.0);
@@ -52,6 +78,7 @@ class EffectWallDamage extends Effect {
 
   static particleSize = 3;
 }
+
 
 function doVisualEffect(effect) {
   effects.add(effect)

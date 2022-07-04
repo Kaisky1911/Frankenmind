@@ -2,7 +2,7 @@
 // Hex Grid Map
 class Map {
     constructor() {
-        this.data = Map.createMapDataFromDict(mapData)
+        this.data = {}
     }
 
     draw(dur) {
@@ -58,6 +58,7 @@ class Map {
         this.data[key] = hex;
     }
 
+
     doMoveCollision(o) {
             let hexs = this.getHexNeighboorHood(Map.toHexPosQ(o.x, o.y), Map.toHexPosR(o.x, o.y))
             for (let hex of hexs) {
@@ -65,7 +66,7 @@ class Map {
                     let dx = o.x - hex.x;
                     let dy = o.y - hex.y;
                     let disSq = dx*dx + dy*dy;
-                    let minDis = o.constructor.size + Hex.size;
+                    let minDis = o.size + Hex.size;
                     if (disSq < minDis*minDis) { // overlap
                         if (dx*o.vx + dy*o.vy < 0) { // checks if the obj is actually moving towards the hex (dot product)
                             let angle = Math.atan2(dy, dx);
@@ -92,7 +93,41 @@ class Map {
         return this.get(q, r);
     }
 
-    stringify(saveObjects=false) {
+    findPathFromTo(startHex, endHex, maxIt = 20, walkOverPits=false) {
+        let lookedHexs = new Set([])
+        let frontHexs = new Set([startHex])
+        let it = 0;
+        while (it++ < maxIt) {
+            let newFrontHexs = new Set([])
+            for (let hex of frontHexs) {
+                for (let nb of hex.neighboors) {
+                    if (nb != null && !lookedHexs.has(nb) && !frontHexs.has(nb) && !newFrontHexs.has(nb) && !nb.solid && (walkOverPits || !nb.isPit)) {
+                        newFrontHexs.add(nb)
+                        nb.path = hex
+                        if (nb == endHex) {
+                            let path = []
+                            let front = endHex;
+                            for (let i = 0; i < maxIt; i++) {
+                                path.push(front)
+                                front = front.path
+                                if (front == startHex) {
+                                    return path;
+                                }
+                            }
+                            return null;
+                        }
+                    }
+                }
+            }
+            for (let hex of frontHexs) {
+                lookedHexs.add(hex);
+            }
+            frontHexs = newFrontHexs
+        }
+        return null;
+    }
+
+    stringify(saveObjects=false, saveEventObjects=true) {
         let mapData = {}
         
         for (const [key, hex] of Object.entries(this.data)) {
@@ -106,13 +141,18 @@ class Map {
             if (saveObjects) {
                 mapData[key]["objects"] = []
                 for (let o of hex.objects) {
-                    mapData[key]["objects"].push(o.stringify())
+                    if (saveEventObjects || !o.eventSpawned) mapData[key]["objects"].push(o.stringify())
                 }
             }
         }
         return JSON.stringify(mapData);
     }
 
+    randomizeTextures() {
+        for (const [key, hex] of Object.entries(map.data)) {
+            hex.setType(hex.type)
+        }
+    }
 
     static connectNeighboorhood(data, hex, q, r) {
         hex.neighboors[0] = Map.connectNeighboor(data, q+1, r, 3, hex)
@@ -131,11 +171,11 @@ class Map {
         return hex;
     }
 
-    static createMapDataFromString(mapString) {
-        return Map.createMapDataFromDict(JSON.parse(mapString))
+    static createMapDataFromString(mapString, loadPlayer=true) {
+        return Map.createMapDataFromDict(JSON.parse(mapString), loadPlayer)
     }
 
-    static createMapDataFromDict(mapdata) {
+    static createMapDataFromDict(mapdata, loadPlayer=true) {
         let data = {}
         for (const [key, hexData] of Object.entries(mapdata)) {
             let hex = new Hex(hexData.q, hexData.r, data, hexData.type);
@@ -145,9 +185,11 @@ class Map {
             if ("objects" in hexData) {
                 for (let objStr of hexData.objects) {
                     let objData = JSON.parse(objStr);
-                    let o = gameObjClasses[objData.constructorName].createFromDict(objData);
-                    hex.loadObject(o);
-                    o.hex = hex;
+                    if (loadPlayer || (objData.constructorName != "Ball" && objData.constructorName != "Player")) {
+                        let o = gameObjClasses[objData.constructorName].createFromDict(objData);
+                        hex.loadObject(o);
+                        o.hex = hex;
+                    }
                 }
             }
         }
@@ -177,7 +219,7 @@ class Map {
 
 
 function saveMap() {
-    var mapString = "var mapData = " + map.stringify()
+    var mapString = "var mapData = " + map.stringify(true, false)
 
     var a = document.createElement("a");
     a.href = window.URL.createObjectURL(new Blob([mapString], {type: "text/plain"}));
@@ -200,3 +242,4 @@ function loadMap() {
     }
     input.click();
 }
+class Test {}

@@ -2,6 +2,10 @@
 
 
 var sprites = {
+  "title": {
+    "w": 128,
+    "h": 128,
+  },
   "player": {
     "w": 19,
     "h": 26,
@@ -25,12 +29,35 @@ var sprites = {
     "w": 32,
     "h": 47,
     "yOff": 10,
+    "frames": 5,
   },
   "wallDestroyable": {
     "w": 32,
     "h": 47,
     "yOff": 10,
     "frames": 4,
+  },
+  "wallMovable": {
+    "w": 32,
+    "h": 47,
+    "yOff": 10,
+    "frames": 1,
+  },
+  "wallMovableSunken": {
+    "w": 32,
+    "h": 47,
+    "yOff": -10,
+    "frames": 1,
+  },
+  "door": {
+    "w": 32,
+    "h": 37,
+    "frames": 2,
+  },
+  "lava": {
+    "w": 32,
+    "h": 37,
+    "frames": 2,
   },
   "wallParticle": {
     "w": 4,
@@ -52,11 +79,56 @@ var sprites = {
     "h": 13,
     "frames": 6,
   },
+  "snake": {
+    "w": 32,
+    "h": 20,
+    "frames": 4,
+  },
+  "rat": {
+    "w": 17,
+    "h": 29,
+    "frames": 4,
+  },
+  "lizard": {
+    "w": 48,
+    "h": 66,
+    "frames": 4,
+  },
   "heart": {
     "w": 5,
     "h": 8,
     "frames": 2,
-  }
+  },
+  "heart2": {
+    "w": 8,
+    "h": 8,
+  },
+  "lever": {
+    "w": 10,
+    "h": 14,
+    "frames": 2,
+  },
+  "fireball": {
+    "w": 12,
+    "h": 18,
+    "frames": 3,
+  },
+  "boulder": {
+    "w": 240,
+    "h": 240,
+  },
+  "sign": {
+    "w": 32,
+    "h": 32,
+  },
+  "save": {
+    "w": 32,
+    "h": 32,
+  },
+  "end": {
+    "w": 320,
+    "h": 198,
+  },
 }
 
 
@@ -73,9 +145,11 @@ function initGraphics() {
 
 function drawSprite(spriteKey, x, y, w, h, frame = 0, angle = 0, context = ctx, action = 0) {
   let sprite = sprites[spriteKey]
-  let yOff = Math.round(sprite.yOff * h / (sprite.h - sprite.yOff))
+  let yOff = Math.round(sprite.yOff * h / (sprite.h - Math.abs(sprite.yOff)))
+  let yOff2 = yOff;
+  if (sprite.yOff < 0) yOff2 = 0;
   if (angle == 0) {
-    context.drawImage(sprite.img, frame * sprite.w, action * sprite.h, sprite.w, sprite.h, x - player.viewX0, y - player.viewY0 - yOff, w, h + yOff);
+    context.drawImage(sprite.img, frame * sprite.w, action * sprite.h, sprite.w, sprite.h, x - player.viewX0, y - player.viewY0 - yOff2, w, h + Math.abs(yOff));
   }
   else {
     context.save();
@@ -83,7 +157,7 @@ function drawSprite(spriteKey, x, y, w, h, frame = 0, angle = 0, context = ctx, 
     context.rotate(angle);
     context.drawImage(
       sprite.img,
-      frame * sprite.w, 0,
+      frame * sprite.w, action * sprite.h,
       sprite.w, sprite.h,
       -w/2, -h/2 - yOff,
       w, h + yOff
@@ -92,10 +166,20 @@ function drawSprite(spriteKey, x, y, w, h, frame = 0, angle = 0, context = ctx, 
   }
 }
 
+function drawShadow(x, y, size, context) {
+  context.fillStyle = "black";
+  context.beginPath();
+  context.arc(x - player.viewX0, y - player.viewY0, size, 0, Math.PI * 2);
+  context.closePath();
+  context.fill();
+}
+
 function draw(dur) {
   ctxBack.clearRect(0, 0, canvasBack.width, canvasBack.height);
+  ctxShadow.clearRect(0, 0, canvasShadow.width, canvasShadow.height);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctxTop.clearRect(0, 0, canvasTop.width, canvasTop.height);
+  ctxTopShadow.clearRect(0, 0, canvasTopShadow.width, canvasTopShadow.height);
   map.draw(dur);
   for (let effect of effects) {
     effect.draw(dur);

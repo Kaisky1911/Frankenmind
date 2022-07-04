@@ -3,3 +3,8 @@ html, body {
     padding: 0;
     overflow: hidden;
 }
+
+@font-face {
+    font-family: 'pixelfont';
+    src: url('04B_03__.TTF');
+}

@@ -5,25 +5,82 @@ var soundNames = [
   "ballHitWall",
   "ballShoot",
   "bat_flap_2",
+  "Player_Speech_0",
+  "Player_Speech_1",
+  "Player_Speech_2",
+  "Player_Speech_3",
+  "Player_Speech_4",
+  "Player_Speech_5",
+  "Player_Speech_6",
+  "Player_Speech_7",
+  "Player_Speech_9",
+  "Player_Speech_10",
+  "Player_Speech_11",
+  "Player_Speech_12",
+  "Player__NewLines_1",
+  "Player__NewLines_2",
+  "Player__NewLines_3",
+  "Player__NewLines_4",
+  "Player__NewLines_5",
+  "Player__NewLines_6",
+  "Player__NewLines_7",
+  "Player__NewLines_8",
+  "Player__NewLines_9",
+  "Player__NewLines_10",
+  "Player__NewLines_11",
+  "Player__NewLines_12",
+  "Player__NewLines_13",
+  "Player__NewLines_14",
+  "Player__NewLines_15",
+  "Player__NewLines_16",
+  "Player__NewLines_17",
+  "Player__NewLines_18",
+  "Player__NewLines_19",
+  "Player__NewLines_20",
+  "Player__NewLines_21",
+  "Player__NewLines_22",
+  "Player__NewLines_23",
+  "Player__NewLines_24",
+  "Player__NewLines_25",
+  "Player__NewLines_26",
+  "Player__NewLines_27",
+  "Player__NewLines_28",
+  "Player__NewLines_29",
+  "Player__NewLines_30",
+  "lizard_death",
 ]
 var soundNamesMP3 = [
-  "collect_brain",
+  "heart",
   "throw_brain",
   "wall_break_1",
   "wall_break_2",
   "wall_bump",
   "wall_hit_1",
   "wall_hit_2",
+  "enemy_death",
   "bat_attack",
-  "bat_death",
   "bat_flap",
+  "rat_attack",
+  "rat_move",
+  "snake_attack",
+  "brain_fall",
+  "wall_move",
+  "wall_fall",
+  "lizard_spin",
+  "lizard_growl",
+  "lizard_roar",
+  "lizard_throw",
+  "lizard_walk",
+  "lever",
+  "boulder",
 ]
+
 var sounds = {}
 var oosspsd = 0 // outOfScreenStillPlaySoundDis
 var soundMaxDis = 0
 var soundCount = 10
 var music = {};
-var currentMusic = "default";
+var currentMusic = "menu";
 var walkSound;
 
 var slowModeOscillator;
@@ -65,6 +122,14 @@ function initAudio() {
   music["battle"].loop = true;
   music["battle"].volume = 0.2;
 
+  music["win"] = new Audio('sounds/win_theme.mp3');
+  music["win"].loop = true;
+  music["win"].volume = 0.2;
+
+  music["menu"] = new Audio('sounds/opening_theme.mp3');
+  music["menu"].loop = true;
+  music["menu"].volume = 0.2;
+
   music[currentMusic].play();
 
   walkSound = new Audio('sounds/walking_3.mp3');
@@ -83,7 +148,7 @@ function initAudio() {
     sounds[sound] = [0]
     for (i = 0; i < soundCount; ++i) {
       sounds[sound].push(new Audio(`sounds/${sound}.wav`))
-      audioContext.createMediaElementSource(sounds[sound][i+1]).connect(stereo).connect(audioContext.destination);
+      audioContext.createMediaElementSource(sounds[sound][i+1]).connect(audioContext.destination);
     }
   }
 
@@ -91,7 +156,7 @@ function initAudio() {
     sounds[sound] = [0]
     for (i = 0; i < soundCount; ++i) {
       sounds[sound].push(new Audio(`sounds/${sound}.mp3`))
-      audioContext.createMediaElementSource(sounds[sound][i+1]).connect(stereo).connect(audioContext.destination);
+      audioContext.createMediaElementSource(sounds[sound][i+1]).connect(audioContext.destination);
     }
   }
 }
