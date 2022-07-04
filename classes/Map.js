@@ -36,10 +36,7 @@ class Map {
                 q_end = range - r;
             }
             for (let q = q_start; q <= q_end; q++) {
-                let hex = this.get(q0 + q, r0 + r);
-                for (let o of hex.objects) {
-                    o.update(dur);
-                }
+                this.get(q0 + q, r0 + r).update(dur);
             }
         }
     }

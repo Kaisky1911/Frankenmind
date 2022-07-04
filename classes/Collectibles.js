@@ -6,11 +6,13 @@ class Collectible extends GameObject {
     }
 
     update() {
-        if (this.hex.objects.has(player)) {
-            this.effect(dur);
-        }
-        else {
-            this.effectOff(dur);
+        if (!levelEditorEnabled) {
+            if (this.hex.objects.has(player)) {
+                this.effect(dur);
+            }
+            else {
+                this.effectOff(dur);
+            }
         }
     }
     effectOff(dur) {}

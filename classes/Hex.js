@@ -11,6 +11,8 @@ class Hex {
         this.setType(type)
         this.oldtype = null
         this.oldsprite = null
+        this.beingPushedDir = null
+        this.beingPushedTimer = 0
     }
     draw(dur) {
         let context = ctx;
@@ -23,7 +25,13 @@ class Hex {
             }
         }
         for (let frame of this.spriteFrames) {
-            drawSprite(this.sprite, this.x - Hex.size, this.y - Hex.yRenderSize, 2 * Hex.size, 2 * Hex.yRenderSize, frame, 0, context)
+            if (this.beingPushedDir != null) {
+                let angle = this.beingPushedDir * Math.PI / 3
+                let offX = 4 * Hex.size * this.beingPushedTimer * Math.cos(angle)
+                let offY = 4 * Hex.size * this.beingPushedTimer * Math.sin(angle)
+                drawSprite(this.sprite, this.x - Hex.size + offX, this.y - Hex.yRenderSize + offY, 2 * Hex.size, 2 * Hex.yRenderSize, frame, 0, context)
+            }
+            else drawSprite(this.sprite, this.x - Hex.size, this.y - Hex.yRenderSize, 2 * Hex.size, 2 * Hex.yRenderSize, frame, 0, context)
         }
         if (this.solid && this.type != "door") {
             // shadow
@@ -43,6 +51,18 @@ class Hex {
         }
         for (let o of this.objects) {
             o.draw(dur);
+        }
+    }
+
+    update(dur) {
+        for (let o of this.objects) {
+            o.update(dur);
+        }
+        if (this.beingPushedDir != null) {
+            this.beingPushedTimer += dur;
+            if (this.beingPushedTimer > 0.5) {
+                this.pushWallDone(this.beingPushedDir)
+            }
         }
     }
 
@@ -83,7 +103,13 @@ class Hex {
     }
 
     pushWall(dir) {
+        this.beingPushedDir = dir;
         playSound("wall_move", this.x, this.y, 0.4);
+    }
+
+    pushWallDone(dir) {
+        this.beingPushedDir = null;
+        this.beingPushedTimer = 0;
         playSound("wall_fall", this.x, this.y, 0.4);
         if (this.oldtype != null) {
             this.type = this.oldtype 
@@ -140,6 +166,7 @@ class Hex {
     }
     
     setType(type) {
+
         this.type = type
         this.isPit = false;
         if (this.type == "wall") {
@@ -156,6 +183,9 @@ class Hex {
             this.sprite = "wallMovable";
             this.spriteFrames = [0];
             this.solid = true;
+            this.oldtype = "floor";
+            this.oldsprite = "floor";
+            this.oldspriteFrames = [Math.floor(Math.random() * 2 + 4)];
         }
         else if (this.type == "floor") {
             this.sprite = "floor";
