@@ -13,6 +13,7 @@ class Hex {
         this.oldsprite = null
         this.beingPushedDir = null
         this.beingPushedTimer = 0
+        this.isGettingPushedOn = false;
     }
     draw(dur) {
         let context = ctx;
@@ -89,11 +90,11 @@ class Hex {
             if (speed > 800) {
                 let dir = Math.floor(angle / Math.PI * 3 + 6.5) % 6;
                 let nb = this.neighboors[dir]
-                if (nb != null && !nb.solid) this.pushWall(dir)
+                if (nb != null && !nb.solid && !nb.isGettingPushedOn) this.pushWall(dir)
                 else {
                     dir = (dir + 3) % 6
                     nb = this.neighboors[dir]
-                    if (nb != null && !nb.solid) this.pushWall(dir)
+                    if (nb != null && !nb.solid && !nb.isGettingPushedOn) this.pushWall(dir)
                 }
             }
             
@@ -105,22 +106,22 @@ class Hex {
     pushWall(dir) {
         this.beingPushedDir = dir;
         playSound("wall_move", this.x, this.y, 0.4);
+        this.neighboors[dir].isGettingPushedOn = true;
+        if (this.oldtype == null) {
+            this.oldtype = "floor";
+            this.oldsprite = "floor";
+            this.oldspriteFrames = [Math.floor(Math.random() * 2 + 4)];
+        }
     }
 
     pushWallDone(dir) {
+        this.neighboors[dir].isGettingPushedOn = false;
         this.beingPushedDir = null;
         this.beingPushedTimer = 0;
         playSound("wall_fall", this.x, this.y, 0.4);
-        if (this.oldtype != null) {
-            this.type = this.oldtype 
-            this.sprite = this.oldsprite
-            this.spriteFrames = this.oldspriteFrames
-        }
-        else {
-            this.type = "floor";
-            this.sprite = "floor";
-            this.spriteFrames = [Math.floor(Math.random() * 2 + 4)];
-        }
+        this.type = this.oldtype 
+        this.sprite = this.oldsprite
+        this.spriteFrames = this.oldspriteFrames
         this.solid = false;
         if (this.neighboors[dir].isPit) {
             this.neighboors[dir].isPit = false
@@ -188,10 +189,15 @@ class Hex {
                 this.solid = false;
             }
             else {
-                if (!this.solid) {
+                if (!this.solid && this.type != null) {
                     this.oldtype = this.type 
                     this.oldsprite = this.sprite
                     this.oldspriteFrames = this.spriteFrames
+                }
+                else {
+                    this.oldtype = "floor"
+                    this.oldsprite = "floor"
+                    this.oldspriteFrames = [Math.floor(Math.random() * 2 + 4)]
                 }
                 this.sprite = "wallMovable";
                 this.solid = true;
