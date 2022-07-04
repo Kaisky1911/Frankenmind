@@ -1,19 +1,29 @@
 // < > |
 
 class Collectible extends GameObject {
-    constructor(x, y, brainCanTrigger=false) {
+    constructor(x, y, brainCanTrigger=false, range = Hex.size) {
         super(x, y);
         this.brainCanTrigger = brainCanTrigger
+        this.range = range;
+        this.rangeSq = range*range;
     }
 
     update(dur) {
         if (!levelEditorEnabled) {
-            if (this.hex.objects.has(player) || (this.brainCanTrigger && this.hex.objects.has(ball))) {
+            let dx = player.x - this.x;
+            let dy = player.y - this.y;
+            if (dx*dx + dy*dy <= this.rangeSq) {
                 this.effect(dur);
             }
-            else {
-                this.effectOff(dur);
+            else if (this.brainCanTrigger) {
+                dx = ball.x - this.x;
+                dy = ball.y - this.y;
+                if (dx*dx + dy*dy <= this.rangeSq) {
+                    this.effect(dur);
+                }
+                else this.effectOff(dur);
             }
+            else this.effectOff(dur);
         }
     }
     effectOff(dur) {}

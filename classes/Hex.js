@@ -6,7 +6,7 @@ class Hex {
         this.x = Map.fromHexPosX(q, r)
         this.y = Map.fromHexPosY(q, r)
         this.objects = new Set([]);
-        this.neighboors = [null, null, null, null, null]
+        this.neighboors = [null, null, null, null, null, this]
         Map.connectNeighboorhood(data, this, q, r);
         this.setType(type)
         this.oldtype = null
@@ -176,6 +176,18 @@ class Hex {
         this.objects = new Set()
         if (hasPlayer) this.objects.add(player);
         if (hasBall) this.objects.add(ball);
+    }
+
+    getHexsInTileRange(range) {
+        let hexs = new Set([this])
+        for (let i = 0; i < range; ++i) {
+            for (let hex of hexs) {
+                for (let nb of hex.neighboors) {
+                    if (!hexs.has(nb)) hexs.add(nb)
+                }
+            }
+        }
+        return hexs;
     }
     
     setType(type) {

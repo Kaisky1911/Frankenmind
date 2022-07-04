@@ -76,12 +76,7 @@ class Map {
     }
 
     getHexNeighboorHood(q, r) { // returns the hex and all its 6 neighboors on that position in an array
-        let hex = map.get(q, r);
-        let hexs = [hex]
-        for (let nb of hex.neighboors) {
-            hexs.push(nb);
-        }
-        return hexs;
+        return map.get(q, r).neighboors;
     }
 
     hexAtXY(x, y) {
