@@ -14,41 +14,53 @@ class Hex {
         this.beingPushedDir = null
         this.beingPushedTimer = 0
         this.isGettingPushedOn = false;
+        this.frameTimer = 0;
+        this.aniFrame = 0;
     }
     draw(dur) {
         let context = ctx;
         if (!this.solid) {
             context = ctxBack
         }
-        if (this.oldsprite != null) {
-            for (let frame of this.oldspriteFrames) {
-                drawSprite(this.oldsprite, this.x - Hex.size, this.y - Hex.yRenderSize, 2 * Hex.size, 2 * Hex.yRenderSize, frame, 0, ctxBack)
+        if (this.type == "lava") {
+            this.frameTimer -= dur
+            if (this.frameTimer <= 0) {
+                this.frameTimer = 0.5 + Math.random()
+                this.aniFrame = (this.aniFrame + 1) % 2
             }
+            drawSprite(this.sprite, this.x - Hex.size, this.y - Hex.yRenderSize, 2 * Hex.size, 2 * Hex.yRenderSize, this.aniFrame, 0, context)
         }
-        for (let frame of this.spriteFrames) {
-            if (this.beingPushedDir != null) {
-                let angle = this.beingPushedDir * Math.PI / 3
-                let offX = 4 * Hex.size * this.beingPushedTimer * Math.cos(angle)
-                let offY = 4 * Hex.size * this.beingPushedTimer * Math.sin(angle)
-                drawSprite(this.sprite, this.x - Hex.size + offX, this.y - Hex.yRenderSize + offY, 2 * Hex.size, 2 * Hex.yRenderSize, frame, 0, context)
+        else {
+            if (this.oldsprite != null) {
+                for (let frame of this.oldspriteFrames) {
+                    drawSprite(this.oldsprite, this.x - Hex.size, this.y - Hex.yRenderSize, 2 * Hex.size, 2 * Hex.yRenderSize, frame, 0, ctxBack)
+                }
             }
-            else drawSprite(this.sprite, this.x - Hex.size, this.y - Hex.yRenderSize, 2 * Hex.size, 2 * Hex.yRenderSize, frame, 0, context)
-        }
-        if (this.solid && this.type != "door") {
-            // shadow
-            let x = this.x - player.viewX0 + 0.8 * Hex.size;
-            let y = this.y - player.viewY0 - 0.4 * Hex.size;
-            let yOff = 0.5 * Hex.size * Hex.yxRatioconsole
-            ctxShadow.fillStyle = "black";
-            ctxShadow.beginPath();
-            ctxShadow.moveTo(x + Hex.size, y - yOff);
-            ctxShadow.lineTo(x + Hex.size, y + yOff);
-            ctxShadow.lineTo(x, y + Hex.yxRatio * Hex.size);
-            ctxShadow.lineTo(x - Hex.size, y + yOff);
-            ctxShadow.lineTo(x - Hex.size, y - yOff);
-            ctxShadow.lineTo(x, y - Hex.yxRatio * Hex.size);
-            ctxShadow.closePath();
-            ctxShadow.fill();
+            for (let frame of this.spriteFrames) {
+                if (this.beingPushedDir != null) {
+                    let angle = this.beingPushedDir * Math.PI / 3
+                    let offX = 4 * Hex.size * this.beingPushedTimer * Math.cos(angle)
+                    let offY = 4 * Hex.size * this.beingPushedTimer * Math.sin(angle)
+                    drawSprite(this.sprite, this.x - Hex.size + offX, this.y - Hex.yRenderSize + offY, 2 * Hex.size, 2 * Hex.yRenderSize, frame, 0, context)
+                }
+                else drawSprite(this.sprite, this.x - Hex.size, this.y - Hex.yRenderSize, 2 * Hex.size, 2 * Hex.yRenderSize, frame, 0, context)
+            }
+            if (this.solid && this.type != "door") {
+                // shadow
+                let x = this.x - player.viewX0 + 0.8 * Hex.size;
+                let y = this.y - player.viewY0 - 0.4 * Hex.size;
+                let yOff = 0.5 * Hex.size * Hex.yxRatioconsole
+                ctxShadow.fillStyle = "black";
+                ctxShadow.beginPath();
+                ctxShadow.moveTo(x + Hex.size, y - yOff);
+                ctxShadow.lineTo(x + Hex.size, y + yOff);
+                ctxShadow.lineTo(x, y + Hex.yxRatio * Hex.size);
+                ctxShadow.lineTo(x - Hex.size, y + yOff);
+                ctxShadow.lineTo(x - Hex.size, y - yOff);
+                ctxShadow.lineTo(x, y - Hex.yxRatio * Hex.size);
+                ctxShadow.closePath();
+                ctxShadow.fill();
+            }
         }
         for (let o of this.objects) {
             o.draw(dur);
@@ -86,7 +98,7 @@ class Hex {
                     player.doSpeech("hitwall");
                 }
             }
-        } else if (this.type == "wallMovable") {
+        } else if (this.type == "wallMovable" && this.beingPushedDir == null) {
             if (speed > 800) {
                 let dir = Math.floor(angle / Math.PI * 3 + 6.5) % 6;
                 let nb = this.neighboors[dir]
