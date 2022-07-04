@@ -102,11 +102,11 @@ class Hex {
             if (speed > 800) {
                 let dir = Math.floor(angle / Math.PI * 3 + 6.5) % 6;
                 let nb = this.neighboors[dir]
-                if (nb != null && !nb.solid && !nb.isGettingPushedOn) this.pushWall(dir)
+                if (nb != null && !nb.solid && !nb.isGettingPushedOn && !nb.objects.has(player)) this.pushWall(dir)
                 else {
                     dir = (dir + 3) % 6
                     nb = this.neighboors[dir]
-                    if (nb != null && !nb.solid && !nb.isGettingPushedOn) this.pushWall(dir)
+                    if (nb != null && !nb.solid && !nb.isGettingPushedOn && !nb.objects.has(player)) this.pushWall(dir)
                 }
             }
             

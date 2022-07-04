@@ -149,6 +149,7 @@ function initAudio() {
     sounds[sound] = [0]
     for (i = 0; i < soundCount; ++i) {
       sounds[sound].push(new Audio(`sounds/${sound}.wav`))
+      sounds[sound][i+1].crossOrigin = "anonymous";
       audioContext.createMediaElementSource(sounds[sound][i+1]).connect(audioContext.destination);
     }
   }
@@ -157,6 +158,7 @@ function initAudio() {
     sounds[sound] = [0]
     for (i = 0; i < soundCount; ++i) {
       sounds[sound].push(new Audio(`sounds/${sound}.mp3`))
+      sounds[sound][i+1].crossOrigin = "anonymous";
       audioContext.createMediaElementSource(sounds[sound][i+1]).connect(audioContext.destination);
     }
   }
