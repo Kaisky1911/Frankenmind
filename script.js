@@ -149,28 +149,34 @@ function startGame() {
     requestAnimationFrame(Update);
 }
 
-var frameRaterDivider = 1;
-var frameRateDividerCounter = 0;
+var logicInterval = 1/240;
+var graphicTimer = 0;
+var logicTimer = 0;
 
 // Game Loop //
 function Update(timestamp) {
-    frameRateDividerCounter++;
-    if (frameRateDividerCounter < frameRaterDivider) {
-        requestAnimationFrame(Update);
-        return;
-    }
-    frameRateDividerCounter = 0;
-    let dur = fpsCalculation(timestamp);
+    requestAnimationFrame(Update);
+
+
+    dur = Math.min(0.001 * (timestamp - lastRender), 0.1)
+    lastRender = timestamp
+
+
     playerMovement();
     if (endGameTimer > 0) endGameTimer += dur;
     if (endGameTimer > 4) {
         ctx.drawImage(sprites["end"].img, 0, 0, canvas.width, canvas.height);
     }
     else {
-        gameUpdate(dur);
-        draw(dur);
+        let counter = 0;
+        while (logicTimer < graphicTimer && counter < 8) {
+            counter++;
+            gameUpdate(logicInterval * gameSpeed);
+            logicTimer += logicInterval;
+        }
+        draw(dur * gameSpeed);
+        graphicTimer += dur;
     }
-    requestAnimationFrame(Update);
 }
 
 function gameUpdate(dur) {
@@ -184,17 +190,6 @@ function gameUpdate(dur) {
 
     if (saveGameAtEndThisFrameFlag) actuallySaveGame();
     else if (loadGameAtEndThisFrameFlag) actuallyLoadGame();
-}
-
-// FPS Calculation //
-function fpsCalculation(timestamp) {
-	dur = 0.001 * (timestamp - lastRender) 
-    // if the game is worse than 10 FPS, it will actually slow to at max 0.1 in-game-seconds per frame
-    if (dur > 0.1) { 
-        dur = 0.1
-    }
-	lastRender = timestamp
-	return dur * gameSpeed;
 }
 
 function setGameSpeed(val) {

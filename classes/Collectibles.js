@@ -5,7 +5,7 @@ class Collectible extends GameObject {
         super(x, y);
     }
 
-    update() {
+    update(dur) {
         if (!levelEditorEnabled) {
             if (this.hex.objects.has(player)) {
                 this.effect(dur);
