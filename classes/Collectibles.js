@@ -77,6 +77,8 @@ class Lever extends Collectible {
     effect(dur) {
         if (!this.on) {
             playSound("lever", this.x, this.y, 0.4);
+            playSound("door_open", this.x, this.y, 0.4);
+            player.doCameraShake(5, 2.0);
             this.on = true;
             let hex = map.get(this.dq, this.dr);
             if (hex.type == "door") hex.open();

@@ -66,6 +66,7 @@ var soundNamesMP3 = [
   "brain_fall",
   "wall_move",
   "wall_fall",
+  "door_open",
   "lizard_spin",
   "lizard_growl",
   "lizard_roar",
