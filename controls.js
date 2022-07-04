@@ -9,6 +9,7 @@ var menuControls = {
 }
 
 function buttonPressed(b) {
+	console.log(b)
 	if (typeof(b) == "object") {
 		return b.pressed;
 	}
