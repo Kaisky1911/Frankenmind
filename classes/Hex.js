@@ -166,71 +166,92 @@ class Hex {
     }
     
     setType(type) {
-
-        this.type = type
-        this.isPit = false;
-        if (this.type == "wall") {
+        if (this.type == type) {
+            if (type == "pit") this.updatePitFrames();
+            return;
+        }
+        if (type == "wall") {
             this.sprite = "wall";
             this.spriteFrames = [Math.max(0, Math.floor(Math.random() * 16) - 11)]
             this.solid = true;
+            this.isPit = false;
         }
-        else if (this.type == "wallDestroyable") {
+        else if (type == "wallDestroyable") {
             this.sprite = "wallDestroyable";
             this.spriteFrames = [0];
             this.solid = true;
+            this.isPit = false;
         }
-        else if (this.type == "wallMovable") {
-            this.sprite = "wallMovable";
+        else if (type == "wallMovable") {
+            if (this.isPit) {
+                this.sprite = "wallMovableSunken"
+                this.solid = false;
+            }
+            else {
+                if (!this.solid) {
+                    this.oldtype = this.type 
+                    this.oldsprite = this.sprite
+                    this.oldspriteFrames = this.spriteFrames
+                }
+                this.sprite = "wallMovable";
+                this.solid = true;
+            }
             this.spriteFrames = [0];
-            this.solid = true;
-            this.oldtype = "floor";
-            this.oldsprite = "floor";
-            this.oldspriteFrames = [Math.floor(Math.random() * 2 + 4)];
+            this.isPit = false;
         }
-        else if (this.type == "floor") {
+        else if (type == "floor") {
             this.sprite = "floor";
             this.spriteFrames = [Math.floor(Math.random() * 2 + 4)];
             this.solid = false;
+            this.isPit = false;
         }
-        else if (this.type == "lava") {
+        else if (type == "lava") {
             this.sprite = "lava";
             this.spriteFrames = [Math.floor(Math.random() * 2)];
             this.solid = false;
+            this.isPit = false;
         }
-        else if (this.type == "door") {
+        else if (type == "door") {
             this.sprite = "door";
             this.spriteFrames = [0];
             this.solid = true;
+            this.isPit = false;
         }
-        else if (this.type == "dooropen") {
+        else if (type == "dooropen") {
             this.sprite = "door";
             this.spriteFrames = [0];
             this.solid = false;
+            this.isPit = false;
         }
-        else if (this.type == "pit") {
+        else if (type == "pit") {
             this.sprite = "pit";
-            this.spriteFrames = [];
-            let i = 0;
-            for (let nb of this.neighboors) {
-                if (nb == null || !nb.isPit) this.spriteFrames.push(i);
-                else {
-                    let j = (i + 3) % 6
-                    let index = nb.spriteFrames.indexOf(j)
-                    if (index != -1) {
-                        nb.spriteFrames.splice(index, 1)
-                    }
-                }
-                i += 1;
-            }
-            this.spriteFrames = this.spriteFrames.reverse();
+            this.updatePitFrames();
             this.solid = false;
             this.isPit = true;
         }
-        if (!this.isPit) {
+        if (!type.isPit) {
             for (let nb of this.neighboors) {
-                if (nb != null && nb.isPit) nb.setType(nb.type)
+                if (nb != null && nb.type == "pit") nb.updatePitFrames()
             }
         }
+        this.type = type
+    }
+
+    updatePitFrames() {
+        this.spriteFrames = [];
+        let i = 0;
+        for (let nb of this.neighboors) {
+            if (nb == null || (!nb.isPit && nb.sprite != "wallMovableSunken")) this.spriteFrames.push(i);
+            else if (nb.isPit) {
+                let j = (i + 3) % 6
+                let index = nb.spriteFrames.indexOf(j)
+                if (index != -1) {
+                    nb.spriteFrames.splice(index, 1)
+                }
+            }
+            i += 1;
+        }
+        this.spriteFrames = this.spriteFrames.reverse();
     }
 
     toggleFrames() {

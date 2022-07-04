@@ -104,8 +104,8 @@ var sprites = {
     "h": 8,
   },
   "lever": {
-    "w": 10,
-    "h": 14,
+    "w": 11,
+    "h": 15,
     "frames": 2,
   },
   "fireball": {

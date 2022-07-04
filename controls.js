@@ -99,7 +99,7 @@ function initControls() {
 					let o = hex.objects.values().next().value;
 					if (o.constructor.name == "Heart") {
 						o.delete();
-						new Lever(hex.x, hex.y)
+						new Lever(hex.q, hex.r)
 					}
 					else if (o.constructor.name == "Lever") {
 						o.delete();

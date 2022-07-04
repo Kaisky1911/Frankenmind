@@ -53,8 +53,8 @@ class Lever extends Collectible {
         super(hex.x, hex.y);
         this.size = 20;
         this.on = false;
-        this.w = 20;
-        this.h = 30;
+        this.w = 40;
+        this.h = 60;
         this.dq = dq;
         this.dr = dr;
         this.eventSpawned = true;
