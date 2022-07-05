@@ -1,6 +1,6 @@
 // < > |
 
-var gamepad = null;
+var gamepadIndex = null;
 
 var menuControls = {
 	"mouseX": 0,
@@ -9,7 +9,6 @@ var menuControls = {
 }
 
 function buttonPressed(b) {
-	console.log(b)
 	if (typeof(b) == "object") {
 		return b.pressed;
 	}
@@ -150,11 +149,11 @@ function initControls() {
 	});
 
 	window.addEventListener("gamepadconnected", function(e) {
-		gamepad = navigator.getGamepads()[e.gamepad.index];
-		console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
-			e.gamepad.index, e.gamepad.id,
-			e.gamepad.buttons.length, e.gamepad.axes.length);
+		gamepadIndex = e.gamepad.index;
 	  });
+	window.addEventListener("gamepaddisconnected", function(e) {
+		gamepadIndex = null;
+	});
 }
 
 
@@ -166,9 +165,14 @@ function playerMovement() {
 	player.vy = 0;
 
 	player.isWalking = false;
-	
+	let gamepad = null;
+	let gamepadAxesX = 0
+	let gamepadAxesY = 0
 
-	if (gamepad != null) {
+	if (gamepadIndex != null) {
+		gamepad = navigator.getGamepads()[gamepadIndex];
+		gamepadAxesX = gamepad.axes[0]
+		gamepadAxesY = gamepad.axes[1]
 		if (buttonPressed(gamepad.buttons[0]) && !button0lastState) {
 			player.action1Press();
 			button0lastState = true;
@@ -177,6 +181,18 @@ function playerMovement() {
 			player.action1Release();
 			button0lastState = false;
 		}
+	}
+
+	
+	let dis = gamepadAxesX*gamepadAxesX + gamepadAxesY*gamepadAxesY
+	let angle = Math.atan2(gamepadAxesY, gamepadAxesX)
+	if (dis > 0.1) {
+		player.vx = Player.moveSpeed * Math.cos(angle);
+		player.vy = Player.moveSpeed * Math.sin(angle);
+		player.isWalking = true;
+		player.walkingDir = Math.floor(angle / (0.5 * Math.PI) + 3.5) % 4;
+		if (player.walkingDir == 1) player.walkingDir = 2
+		else if (player.walkingDir == 2) player.walkingDir = 1
 	}
 
 
@@ -195,14 +211,14 @@ function playerMovement() {
 	}
 
 	// A //
-	if(keyboard[68] || keyboard[39] || (gamepad != null && buttonPressed(gamepad.buttons[14]))) {
+	if(keyboard[68] || keyboard[39] || (gamepad != null && buttonPressed(gamepad.buttons[15]))) {
 		player.vx = Player.moveSpeed;
 		player.isWalking = true;
 		player.walkingDir = 3;
 	}
 
 	// D //
-	if(keyboard[65] || keyboard[37] || (gamepad != null && buttonPressed(gamepad.buttons[15]))) {
+	if(keyboard[65] || keyboard[37] || (gamepad != null && buttonPressed(gamepad.buttons[14]))) {
 		player.vx = -Player.moveSpeed;
 		player.isWalking = true;
 		player.walkingDir = 2;
