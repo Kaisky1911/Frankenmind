@@ -31,6 +31,12 @@ var sprites = {
     "yOff": 10,
     "frames": 5,
   },
+  "wallSeamless": {
+    "w": 32,
+    "h": 47,
+    "yOff": 10,
+    "frames": 7,
+  },
   "wallDestroyable": {
     "w": 32,
     "h": 47,

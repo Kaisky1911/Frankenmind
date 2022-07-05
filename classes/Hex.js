@@ -6,7 +6,7 @@ class Hex {
         this.x = Map.fromHexPosX(q, r)
         this.y = Map.fromHexPosY(q, r)
         this.objects = new Set([]);
-        this.neighboors = [null, null, null, null, null, this]
+        this.neighboors = [null, null, null, null, null, null, this]
         Map.connectNeighboorhood(data, this, q, r);
         this.setType(type)
         this.oldtype = null
